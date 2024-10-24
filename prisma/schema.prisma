@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  username    String   @unique
+  email       String   @unique
+  password    String
+  role        Role     @default(MEMBER)
+  borrowings  Borrowing[]
+  reservations Reservation[]
+}
+
+enum Role {
+  MEMBER
+  STAFF
+}
+
+model Book {
+  id          String   @id @default(cuid())
+  title       String
+  author      String
+  isbn        String   @unique
+  publishedAt DateTime
+  copies      Int
+  status      BookStatus // Available, Borrowed, Reserved
+  borrowings  Borrowing[]
+  reservations Reservation[]
+}
+
+enum BookStatus {
+  AVAILABLE
+  BORROWED
+  RESERVED
+}
+
+model Borrowing {
+  id            String   @id @default(cuid())
+  borrowDate    DateTime
+  dueDate       DateTime
+  returnDate    DateTime?
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  book          Book     @relation(fields: [bookId], references: [id])
+  bookId        String
+}
+
+model Reservation {
+  id            String   @id @default(cuid())
+  reservationDate DateTime
+  status        ReservationStatus // Active, Cancelled, Fulfilled
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  book          Book     @relation(fields: [bookId], references: [id])
+  bookId        String
+}
+
+enum ReservationStatus {
+  ACTIVE
+  CANCELLED
+  FULFILLED
+}
